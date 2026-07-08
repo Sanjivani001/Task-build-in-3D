@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Techfest | Build in 3D</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #05050a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* 3D Canvas Background */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none; /* Allows clicking through to UI elements */
+        }
+
+        /* UI Overlay Content */
+        .content-wrapper {
+            position: relative;
+            z-index: 2;
+        }
+
+        section {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 10%;
+            pointer-events: none;
+        }
+
+        /* Make interactive elements clickable */
+        .interactive {
+            pointer-events: auto;
+        }
+
+        /* Glassmorphic UI Card Designs */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 1s ease-out;
+        }
+
+        .glass-card.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #b0b0d0;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            color: #000;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.6);
+        }
+
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            color: #666;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translate(-50%, 0); }
+            40% { transform: translate(-50%, -10px); }
+            60% { transform: translate(-50%, -5px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div class="content-wrapper">
+        
+        <section id="hero">
+            <div class="glass-card visible interactive">
+                <h1>TECHFEST 2026</h1>
+                <p>Welcome to the next dimension of innovation. Scroll down to interact with the core engine and witness dynamic 3D transitions built seamlessly for the web.</p>
+                <a href="#explore" class="btn">Explore Core</a>
+            </div>
+            <div class="scroll-indicator">Scroll down to morph object ↓</div>
+        </section>
+
+        <section id="explore">
+            <div class="glass-card interactive">
+                <h1>HYPERSPACE ENGINE</h1>
+                <p>Move your mouse across the screen to warp the particle field. Our interactive 3D matrix reacts in real-time to user coordinates, providing an organic, fluid digital ecosystem.</p>
+                <a href="#future" class="btn">System Specs</a>
+            </div>
+        </section>
+
+        <section id="future">
+            <div class="glass-card interactive">
+                <h1>THE FUTURE IS NOW</h1>
+                <p>Designed completely using raw frontend technologies. Fully responsive, optimized for low latency hardware acceleration, and ready for deployment.</p>
+                <a href="#" class="btn" onclick="alert('System Core Initialized!')">Initialize</a>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        // --- 1. Three.js Setup ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        
+        // Camera
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 3;
+
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // --- 2. Create 3D Interactive Object (Particle Sphere) ---
+        const geometry = new THREE.BufferGeometry();
+        const particlesCount = 1500;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i++) {
+            // Generates a sphere-like cloud distribution
+            posArray[i] = (Math.random() - 0.5) * 5;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        // Material Styling
+        const material = new THREE.PointsMaterial({
+            size: 0.008,
+            color: '#00f2fe',
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        // Mesh
+        const particleMesh = new THREE.Points(geometry, material);
+        scene.add(particleMesh);
+
+        // Add a secondary inner wireframe geometry for complexity
+        const innerGeo = new THREE.IcosahedronGeometry(1, 1);
+        const innerMat = new THREE.MeshBasicMaterial({
+            color: '#4facfe',
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15
+        });
+        const innerMesh = new THREE.Mesh(innerGeo, innerMat);
+        scene.add(innerMesh);
+
+        // --- 3. Interaction Mechanics (Mouse Move) ---
+        let mouseX = 0;
+        let mouseY = 0;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth) - 0.5;
+            mouseY = (event.clientY / window.innerHeight) - 0.5;
+        });
+
+        // --- 4. 3D Scroll Animations & UI Transitions ---
+        let targetScrollY = 0;
+        const cards = document.querySelectorAll('.glass-card');
+
+        window.addEventListener('scroll', () => {
+            targetScrollY = window.scrollY;
+
+            // Trigger UI reveal animations on scroll
+            cards.forEach(card => {
+                const cardTop = card.getBoundingClientRect().top;
+                if(cardTop < window.innerHeight * 0.75) {
+                    card.classList.add('visible');
+                }
+            });
+        });
+
+        // --- 5. Animation Loop ---
+        const clock = new THREE.Clock();
+
+        const animate = () => {
+            requestAnimationFrame(animate);
+
+            const elapsedTime = clock.getElapsedTime();
+
+            // Constant passive rotation
+            particleMesh.rotation.y = elapsedTime * 0.05;
+            innerMesh.rotation.y = -elapsedTime * 0.03;
+
+            // Dynamic Scroll transition: Pull the object closer/further and rotate it faster based on scroll position
+            const scrollNormalized = targetScrollY / (document.documentElement.scrollHeight - window.innerHeight);
+            
+            particleMesh.position.z = scrollNormalized * 1.5; // moves object forward as you scroll
+            particleMesh.rotation.x = scrollNormalized * 2;
+            
+            // Mouse Interaction: Smooth lag effect (easing)
+            particleMesh.rotation.y += (mouseX * 0.5 - particleMesh.rotation.y) * 0.1;
+            particleMesh.rotation.x += (mouseY * 0.5 - particleMesh.rotation.x) * 0.1;
+            innerMesh.rotation.y += (mouseX * 0.5 - innerMesh.rotation.y) * 0.1;
+
+            renderer.render(scene, camera);
+        };
+
+        animate();
+
+        // --- 6. Handle Responsive Window Resize ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
+
